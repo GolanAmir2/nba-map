@@ -117,6 +117,23 @@ const NBAStatsMap = () => {
     });
   };
 
+  const groupPlayersByLocation = (players) => {
+    const groupedPlayers = {};
+    players.forEach(player => {
+      const locationKey = `${player.coords[0]},${player.coords[1]}`;
+      if (!groupedPlayers[locationKey]) {
+        groupedPlayers[locationKey] = {
+          coords: player.coords,
+          logo: player.logo,
+          location: player.location,
+          players: []
+        };
+      }
+      groupedPlayers[locationKey].players.push(player);
+    });
+    return Object.values(groupedPlayers);
+  };
+
   return (
     <div>
       <h1 className="text-xl font-bold text-center">NBA Top Scorers Map ({season})</h1>
@@ -135,19 +152,23 @@ const NBAStatsMap = () => {
       {!error && (
         <MapContainer center={[39.8283, -98.5795]} zoom={4} style={{ height: "500px", width: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {players.map((player, index) => (
+          {groupPlayersByLocation(players).map((location, index) => (
             <Marker 
               key={index} 
-              position={player.coords}
-              icon={createCustomIcon(player.logo)}
+              position={location.coords}
+              icon={createCustomIcon(location.logo)}
             >
               <Popup>
-                <div className="font-bold">{player.name}</div>
-                <div className="text-sm text-gray-600">Rank: #{player.rank} in scoring</div>
-                <div>Team: {player.team}</div>
-                <div>City: {player.location}</div>
-                <div>PPG: {player.ppg}</div>
-                <div>Total Points: {player.totalPoints}</div>
+                <div className="text-lg font-bold mb-2">{location.location}</div>
+                {location.players.map((player, playerIndex) => (
+                  <div key={playerIndex} className="mb-3 pb-2 border-b last:border-b-0">
+                    <div className="font-bold">{player.name}</div>
+                    <div className="text-sm text-gray-600">Rank: #{player.rank} in scoring</div>
+                    <div>Team: {player.team}</div>
+                    <div>PPG: {player.ppg}</div>
+                    <div>Total Points: {player.totalPoints}</div>
+                  </div>
+                ))}
               </Popup>
             </Marker>
           ))}
